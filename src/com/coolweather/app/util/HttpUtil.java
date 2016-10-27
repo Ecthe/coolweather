@@ -1,10 +1,11 @@
 package com.coolweather.app.util;
 
-import java.io.BufferedReader;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.net.HttpURLConnection;
-import java.net.URL;
+import org.apache.http.HttpEntity;
+import org.apache.http.HttpResponse;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.util.EntityUtils;
 
 public class HttpUtil {
 	
@@ -14,30 +15,21 @@ public class HttpUtil {
 			@Override
 			public void run() {
 				// TODO Auto-generated method stub
-				HttpURLConnection connection = null;
+				HttpClient connection = new DefaultHttpClient();
 				try {
-					URL url = new URL (address);
-					connection = (HttpURLConnection) url.openConnection();
-					connection.setRequestMethod("GET");
-					connection.setConnectTimeout(8000);
-					connection.setReadTimeout(8000);
-					InputStream in = connection.getInputStream();
-					BufferedReader reader = new BufferedReader(new InputStreamReader(in));
-					StringBuilder response = new StringBuilder();
-					String line;
-					while ((line = reader.readLine()) != null) {
-						response.append(line);
+					HttpGet httpGet = new HttpGet(address);
+					HttpResponse httpResponse = connection.execute(httpGet);
+					String response = null;
+					if (httpResponse.getStatusLine().getStatusCode() == 200) {
+						HttpEntity entity = httpResponse.getEntity();
+						response = EntityUtils.toString(entity, "utf-8");
 					}
 					if (listener != null) {
 						listener.onFinish(response.toString());
 					}
 				} catch (Exception e) {
 					listener.onError(e);
-				} finally {
-					if (connection != null) {
-						connection.disconnect();
-					}
-				}
+				} 
 			}
 			
 		}).start();
